@@ -1,60 +1,103 @@
-# from numpy import exp, array, random, dot
-import numpy as np
 import tensorflow as tf
 from aiart.DataGenerator import *
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from PIL import Image
-import matplotlib.cm as cm
+from aiart.DisplayScreen import *
+from aiart.ColorMapping import *
 
-# shape = (50, 50)
-# initial_board = tf.random_uniform(shape, minval=0, maxval=2, dtype=tf.int32)
-# board = tf.placeholder(tf.int32, shape=shape, name='board')
+# Import MINST data
+from tensorflow.examples.tutorials.mnist import input_data
+mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
 
-# def update_board(X):
-#     N = convolve2d(X, np.ones((3, 3)), mode='same', boundary='wrap') - X
-#     # Apply rules of the game
-#     X = (N == 3) | (X & (N == 2))
-#     return X
-# board_update = tf.py_func(update_board, [board], [tf.int32])
-# fig = plt.figure()
-
+# Parameters
+learning_rate = 0.001
+training_iters = 200000
+batch_size = 128
+display_step = 10
 
 # Network Parameters
+n_input = 784 # MNIST data input (img shape: 28*28)
+n_classes = 1 # MNIST total classes (0-9 digits)
+dropout = 0.75 # Dropout, probability to keep units
 
-X = tf.placeholder("float", None)
-# Store layers weight & bias
-weights = {
-    'encoder_h1' : tf.Variable(tf.random_normal([1, 100])),
-}
-biases = {
-    'encoder_b1' : tf.Variable(tf.random_normal([100, 1])),
-}
+# tf Graph input
+x = tf.placeholder(tf.float32, [None, n_input])
+y = tf.placeholder(tf.float32, [None, n_classes])
+keep_prob = tf.placeholder(tf.float32) #dropout (keep probability)
+
+
+# Create some wrappers for simplicity
+def conv2d(x, W, b, strides=1):
+    # Conv2D wrapper, with bias and relu activation
+    x = tf.nn.conv2d(x, W, strides=[1, strides, strides, 1], padding='SAME')
+    x = tf.nn.bias_add(x, b)
+    return tf.nn.relu(x)
+
+
+def maxpool2d(x, k=2):
+    # MaxPool2D wrapper
+    return tf.nn.max_pool(x, ksize=[1, k, k, 1], strides=[1, k, k, 1],
+                          padding='SAME')
+
 
 # Create model
-def encoder(x):
-    layer_1 = tf.nn.sigmoid(tf.add(tf.matmul(x, weights['encoder_h1']), biases['encoder_b1']))
-    layer_1 = tf.nn.relu(layer_1)
+def conv_net(x, weights, biases, dropout):
+    # Reshape input picture
+    x = tf.reshape(x, shape=[-1, 28, 28, 1])
 
-    return layer_1
+    # Convolution Layer
+    conv1 = conv2d(x, weights['wc1'], biases['bc1'])
+    # Max Pooling (down-sampling)
+    conv1 = maxpool2d(conv1, k=2)
 
-if __name__ == '__main__':
-    # generate mock sensor input data
-    dg = DataGenerator(100, 10)
-    dg.generateData()
-    data = np.asarray(dg.getSensorData())
-    # print(data)
-    # initialize variables for neural network implementation
-    d = tf.placeholder('float32', None)
-    y = tf.reshape(d, [100, 1])
-    x = tf.placeholder('float32', None)
-    fig = plt.figure()
+    # Convolution Layer
+    conv2 = conv2d(conv1, weights['wc2'], biases['bc2'])
+    # Max Pooling (down-sampling)
+    conv2 = maxpool2d(conv2, k=2)
 
-    with tf.Session() as sess:
-        sess.run(tf.initialize_all_variables())
-        for dt in range(len(data)):
-            X = sess.run(y, feed_dict={d: data[dt]})
-            out = sess.run(encoder(X))
-            plot = plt.imshow(out, cmap='magma', interpolation='nearest')
-            plt.show()
-            plt.close()
+    # Fully connected layer
+    # Reshape conv2 output to fit fully connected layer input
+    fc1 = tf.reshape(conv2, [-1, weights['wd1'].get_shape().as_list()[0]])
+    fc1 = tf.add(tf.matmul(fc1, weights['wd1']), biases['bd1'])
+    fc1 = tf.nn.relu(fc1)
+    # Apply Dropout
+    fc1 = tf.nn.dropout(fc1, dropout)
+
+    # Output, class prediction
+    out = tf.add(tf.matmul(fc1, weights['out']), biases['out'])
+    return out
+
+# Store layers weight & bias
+weights = {
+    # 5x5 conv, 1 input, 32 outputs
+    'wc1': tf.Variable(tf.random_normal([5, 5, 1, 32])),
+    # 5x5 conv, 32 inputs, 64 outputs
+    'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
+    # fully connected, 7*7*64 inputs, 1024 outputs
+    'wd1': tf.Variable(tf.random_normal([7*7*64, 1024])),
+    # 1024 inputs, 10 outputs (class prediction)
+    'out': tf.Variable(tf.random_normal([1024, n_classes]))
+}
+
+biases = {
+    'bc1': tf.Variable(tf.random_normal([32])),
+    'bc2': tf.Variable(tf.random_normal([64])),
+    'bd1': tf.Variable(tf.random_normal([1024])),
+    'out': tf.Variable(tf.random_normal([n_classes]))
+}
+
+# Construct model
+pred = conv_net(x, weights, biases, keep_prob)
+# Initializing the variables
+init = tf.initialize_all_variables()
+
+d = DataGenerator()
+d.generateData()
+sensor_data = d.getSensorData()
+dv = tf.placeholder(tf.float32, None)
+temp = tf.reshape(dv, [n_input, 1])
+with tf.Session() as s:
+    s.run(init)
+    for dt in range(len(sensor_data)):
+        n = s.run(temp, feed_dict={dv: sensor_data[dt]})
+        out = s.run(conv_net(n, weights, biases, dropout))
+        val = int(out)
+        print(ColorMapping.color_map(val))
