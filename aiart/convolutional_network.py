@@ -80,14 +80,18 @@ pred = conv_net(x, weights, biases, keep_prob)
 init = tf.initialize_all_variables()
 
 d = DataGenerator()
-d.generateData()
-sensor_data = d.getSensorData()
-dv = tf.placeholder(tf.float32, None)
-temp = tf.reshape(dv, [n_input, 1])
-with tf.Session() as s:
-    s.run(init)
-    for dt in range(len(sensor_data)):
-        n = s.run(temp, feed_dict={dv: sensor_data[dt]})
-        out = s.run(conv_net(n, weights, biases, dropout))
-        val = int(out)
-        print(ColorMapping.color_map(val))
+screen = Screen()
+
+while True:
+    d.generateData()
+    sensor_data = d.getSensorData()
+    dv = tf.placeholder(tf.float32, None)
+    temp = tf.reshape(dv, [n_input, 1])
+    with tf.Session() as s:
+        s.run(init)
+        for dt in range(len(sensor_data)):
+            n = s.run(temp, feed_dict={dv: sensor_data[dt]})
+            out = s.run(conv_net(n, weights, biases, dropout))
+            val = int(out) % 40
+            color = ColorMapping.color_map(val)
+            screen.draw(color)
