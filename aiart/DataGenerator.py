@@ -2,7 +2,7 @@ import random
 
 MIN_SENSOR_VALUE = 0
 MAX_SENSOR_VALUE = 30
-SENSOR_ENTRIES = 250
+SENSOR_ENTRIES = 1000
 DATA_VECTOR_LENGTH = 784
 
 class DataGenerator(object):

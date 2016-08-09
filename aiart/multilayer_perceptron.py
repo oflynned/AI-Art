@@ -1,12 +1,12 @@
 import tensorflow as tf
-from aiart.DataGenerator import *
-from aiart.ColorMapping import *
-from aiart.Screen import *
+from DataGenerator import *
+from ColorMapping import *
+from Screen import *
 
 # Parameters
 learning_rate = 0.001
 training_epochs = 15
-batch_size = 100
+batch_size = 784
 display_step = 1
 
 # Network Parameters
@@ -49,16 +49,18 @@ init = tf.initialize_all_variables()
 
 d = DataGenerator()
 screen = Screen()
-d.generateData()
-sensor_data = d.getSensorData()
-dv = tf.placeholder(tf.float32, None)
-temp = tf.reshape(dv, [1, n_input])
-with tf.Session() as s:
-    s.run(init)
-    for dt in range(len(sensor_data)):
-        n = s.run(temp, feed_dict={dv: sensor_data[dt]})
-        out = s.run(multilayer_perceptron(n, weights, biases))
-        val = int(out)
-        color = ColorMapping.color_map(val)
-        screen.draw(color)
-        # print(screen.returnSurfaceArray())
+
+while True:
+    d.generateData()
+    sensor_data = d.getSensorData()
+    dv = tf.placeholder(tf.float32, None)
+    temp = tf.reshape(dv, [1, n_input])
+    with tf.Session() as s:
+        s.run(init)
+        for dt in range(len(sensor_data)):
+            n = s.run(temp, feed_dict={dv: sensor_data[dt]})
+            out = s.run(multilayer_perceptron(n, weights, biases))
+            val = int(out) % 80
+            color = ColorMapping.color_map(val)
+            screen.draw(color)
+            # print(screen.returnSurfaceArray())

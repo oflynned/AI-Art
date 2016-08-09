@@ -1,7 +1,7 @@
 import tensorflow as tf
-from aiart.DataGenerator import *
-from aiart.Screen import *
-from aiart.ColorMapping import *
+from DataGenerator import *
+from Screen import *
+from ColorMapping import *
 
 # Network Parameters
 n_input = 784

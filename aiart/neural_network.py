@@ -1,7 +1,7 @@
 import tensorflow as tf
-from aiart.DataGenerator import *
-from aiart.DisplayScreen import *
-from aiart.ColorMapping import *
+from DataGenerator import *
+from DisplayScreen import *
+from ColorMapping import *
 
 # Import MINST data
 from tensorflow.examples.tutorials.mnist import input_data
