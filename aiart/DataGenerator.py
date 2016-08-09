@@ -18,3 +18,7 @@ class DataGenerator(object):
 
     def getSensorData(self):
         return self.data
+
+
+    def generateDataFile(self):
+        pass
