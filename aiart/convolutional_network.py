@@ -81,9 +81,9 @@ init = tf.initialize_all_variables()
 
 d = DataGenerator()
 screen = Screen()
+d.generateData()
 
 while True:
-    d.generateData()
     sensor_data = d.getSensorData()
     dv = tf.placeholder(tf.float32, None)
     temp = tf.reshape(dv, [n_input, 1])

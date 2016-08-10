@@ -10,7 +10,6 @@ class ColorMapping(object):
 
     @staticmethod
     def color_map(x):
-        output = ()
         if x < ColorMapping.COLD:
             output = (0, 0, random.randint(0, 255))
         elif x < ColorMapping.MILD:

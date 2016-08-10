@@ -12,7 +12,7 @@ display_step = 1
 # Network Parameters
 n_hidden_1 = 256 # 1st layer number of features
 n_hidden_2 = 256 # 2nd layer number of features
-n_input = 784
+n_input = 256
 n_classes = 1 # total classes (0-9 digits)
 
 # tf Graph input
@@ -24,7 +24,7 @@ y = tf.placeholder("float", [None, n_classes])
 def multilayer_perceptron(x, weights, biases):
     # Hidden layer with RELU activation
     layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
-    layer_1 = tf.nn.relu(layer_1)
+    layer_1 = tf.nn.tanh(layer_1)
     # Hidden layer with RELU activation
     layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
     layer_2 = tf.nn.relu(layer_2)
@@ -49,9 +49,9 @@ init = tf.initialize_all_variables()
 
 d = DataGenerator()
 screen = Screen()
+d.generateData()
 
 while True:
-    d.generateData()
     sensor_data = d.getSensorData()
     dv = tf.placeholder(tf.float32, None)
     temp = tf.reshape(dv, [1, n_input])
