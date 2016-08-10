@@ -1,5 +1,6 @@
 import random
 
+
 class ColorMapping(object):
     WARM = 30
     MILD = 20
