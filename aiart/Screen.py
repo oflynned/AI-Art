@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Screen(object):
-    WIDTH = 640
+    WIDTH = 730
     HEIGHT = 480
     WHITE = (255, 255, 255)
 
@@ -12,31 +12,34 @@ class Screen(object):
         self.display = pygame.display.set_mode((Screen.WIDTH, Screen.HEIGHT), 0, 24)
         # pygame.display.set_caption("AI Art")
         self.display.fill(Screen.WHITE)
-        self.square = pygame.Surface((1, 1))
-        self.imageArray = np.zeros((Screen.WIDTH, Screen.HEIGHT), dtype=np.uint8)
-        # self.x = 0
-        # self.y = 0
-        # self.row = 0
-        # self.col = 0
-
-    # def draw(self, color):
-    #     x = random.randint(0, 100)
-    #     y = random.randint(0, 100)
-    #     self.display.set_at((x, y), color)
-    #     draw_me = pygame.Rect(x, y, 1, 1)
-    #     self.display.blit(self.square, draw_me)
-    #     pygame.display.update()
+        self.square = pygame.Surface((1, 1)).convert()
+        self.imageArray = []
+        self.row = 0
+        self.col = 0
+        self.temp = []
 
     def draw(self, X, Y, color):
         x = random.randint(0, Screen.HEIGHT)
         y = random.randint(0, Screen.WIDTH)
-        # self.display.set_at((self.x, self.y), color)
-        draw_me = pygame.Rect(X, Y, 7, 7)
-        # self.x += 1
-        # self.y += 1
-        # self.display.blit(self.square, draw_me)
+        draw_me = pygame.Rect(X, Y, 20, 20)
         pygame.draw.rect(self.display, color, draw_me)
         pygame.display.update()
 
-    def fillImageArray(self, x, y):
-        pass
+    def draw1(self, color):
+        if self.col >= Screen.HEIGHT:
+            self.row += 20
+            self.col = 0
+        else:
+            draw_me = pygame.Rect(self.row, self.col, 20, 20)
+            pygame.draw.rect(self.display, color, draw_me)
+            pygame.display.update()
+            self.col += 20
+
+    def updateImageArray(self, color):
+        if self.col >= Screen.WIDTH:
+            self.imageArray.append(list(self.temp))
+            self.temp.clear()
+            self.col = 0
+        else:
+            self.temp.append(color)
+            self.col += 1
